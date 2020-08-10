@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Http;
+@{ 
+    string Username = Context.Session.GetString("Username");
+    string UserType = Context.Session.GetString("UserType");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FYP_ExchangeRate-@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="ExchangeRate" asp-action="ManageExchangeRates">Currency Exchange Management System</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav">
+                        @if (!string.IsNullOrEmpty(UserType))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link">Welcome,  @Username </a>
+                            </li>
+
+                            if (!string.IsNullOrEmpty(UserType) && UserType == "1")
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-toggle="dropdown">Accounts</a>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-divider" asp-area="" asp-controller="Account" asp-action="ManageAccount">Manage Accounts</a>
+                                        <a class="dropdown-divider" asp-area="" asp-controller="Account" asp-action="AddingAccount">Create Accounts</a>
+                                    </div>
+                                </li>
+                            }
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown">Rates & Transactions</a>
+                                <div class="dropdown-menu">
+                                    @if (!string.IsNullOrEmpty(UserType) && UserType == "1")
+                                    {
+                                        <a class="dropdown-divider" asp-area="" asp-controller="ExchangeRate" asp-action="ManageCountries">Add & Manage Country Currencies</a>
+                                        <a class="dropdown-divider" asp-area="" asp-controller="ExchangeRate" asp-action="ManageExchangeRates">Add & Manage Exchange Rate</a>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(UserType) && (UserType == "1" || UserType == "2"))
+                                    {
+                                        <a class="dropdown-divider" asp-area="" asp-controller="Transaction" asp-action="ManageTransactions">View Transaction Requests</a>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(UserType) && UserType == "3")
+                                    {
+                                        <a class="dropdown-divider" asp-area="" asp-controller="Transaction" asp-action="ManageTransactions">View Transactions</a>
+                                    }
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown">Enquiries</a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-divider" asp-area="" asp-controller="Enquiry" asp-action="ViewEnquiries">View Enquiries</a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="dropdown-divider" asp-area="" asp-controller="Account" asp-action="SignOutSubmit">Sign Out</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown">Members</a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-divider" asp-area="" asp-controller="Account" asp-action="SignInHome">Log In</a>
+                                    <a class="dropdown-divider" asp-area="" asp-controller="Account" asp-action="SignUpHome">Sign Up</a>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2020 - FYP_ExchangeRate - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/RPExchangeRate.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

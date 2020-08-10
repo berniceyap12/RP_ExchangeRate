@@ -1,0 +1,51 @@
+﻿@model List<FYP_ExchangeRate.Models.TransactionModels>
+<table class="table table-bordered table-responsive table-hover">
+    <thead>
+        <tr>
+            <th>
+                Transaction Status
+            </th>
+            <th>
+                Customer
+            </th>
+            <th>
+                Payment Method
+            </th>
+            <th>
+                Country From
+            </th>
+            <th>
+                Country To
+            </th>
+            <th>
+                Ammount Input
+            </th>
+            <th>
+                Total Amount
+            </th>
+            <th>
+                Created Date
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var mdl in Model)
+        {
+            <tr>
+                <td>
+                    @if (mdl.IsConfirmed.Value)
+                    {<span>Confirmed</span> }
+                    else
+                    { <span>Not Confirmed</span>}
+                </td>
+                <td>@mdl.CustomerName</td>
+                <td>@mdl.PaymentMethod - @mdl.Remarks</td>
+                <td>@mdl.CountryFrom : @mdl.FromCountryRate</td>
+                <td>@mdl.CountryTo : @mdl.ToCountryRate</td>
+                <td>@mdl.InputMoneyAmount</td>
+                <td>@mdl.TotalCostAmount</td>
+                <td>@mdl.CreatedDate</td>
+            </tr>
+        }
+    </tbody>
+</table>

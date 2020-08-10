@@ -1,0 +1,178 @@
+﻿@model List<FYP_ExchangeRate.Models.EnquiryModel>
+@using Microsoft.AspNetCore.Http;
+@using Newtonsoft.Json;
+@{
+    string UserType = Context.Session.GetString("UserType");
+    string UserID = Context.Session.GetString("UserID");
+}
+
+@if (ViewBag.ErrorMessages != null)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <h5>@ViewBag.ErrorMessages</h5>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(UserType) && UserType == "3")
+{
+    <div class="col-md-12 text-center">
+        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#Enquiry">New Enquiry</button>
+        <div id="Enquiry" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content" style="width:600px;">
+                    @using (Html.BeginForm())
+                    {
+                        <div class="modal-header">
+                            Enquiry Details
+                            <button type="button" class="close" data-dismiss="modal">x</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label>Enquiry Subject</label>
+                                </div>
+                                <div class="col-md-9">
+                                    @Html.TextArea("EnquirySubject", "", 1, 50, new { })
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Enquiry Message</label>
+                                </div>
+                                <div class="col-md-9">
+                                    @Html.TextArea("EnquiryMessage", "", 4, 50, new { })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="hidden" value="@UserID" id="CustomerID" name="CustomerID" />
+                            <input type="hidden" id="CreatedBy" name="CreatedBy" value="@UserID" />
+                            <button type="submit" onclick="CreateNewEnquiries()">Submit</button>
+                            <button type="button" data-dismiss="modal">Cancel</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.Count > 0)
+{
+    <h5>View Your Enquiries</h5>
+    <div class="col-12 text-center">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Enquiry ID
+                    </th>
+                    @if (UserType != "3")
+                    {
+                    <th>
+                        Customer Name
+                    </th>
+                    }
+                    <th>
+                        Enquiry Subject
+                    </th>
+                    <th>
+                        Action
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model)
+                {
+                    <tr>
+                        <td>
+                            @obj.MessageID
+                        </td>
+                        @if(UserType != "3")
+                        {
+                            <td>
+                                @obj.CustomerName
+                            </td>
+                        }
+                        <td>
+                            @if (!string.IsNullOrEmpty(obj.EnquirySubject))
+                            {
+                                if (obj.EnquirySubject.Length > 100)
+                                {
+                                    @obj.EnquirySubject.Substring(0, 100)
+                                }
+                                else
+                                {@obj.EnquirySubject
+                                }
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#ManageEnquiry_@obj.MessageID.ToString()" onclick="OpenEnquiry(@obj.MessageID)">View</button>
+                            <div id="ManageEnquiry_@obj.MessageID.ToString()" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content" style="width:700px;">
+                                        <div id="ManageEnquiryContent_@obj.MessageID.ToString()">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="col-md-12 text-center">
+        <h5> No Enquiries</h5>
+    </div>
+}
+<script>
+    function CreateNewEnquiries() {
+        var EnquiryEnvelope = {};
+        EnquiryEnvelope.CustomerID = $('#CustomerID').val();
+        EnquiryEnvelope.EnquiryMessage = $('#EnquiryMessage').val();
+        EnquiryEnvelope.EnquirySubject = $('#EnquirySubject').val();
+        EnquiryEnvelope.RefreshPage = true;
+        EnquiryEnvelope.CreatedBy = $('#CreatedBy').val();
+
+        if (EnquiryEnvelope.EnquirySubject.length == 0 && EnquiryEnvelope.EnquiryMessage.length == 0) {
+            alert("Please fill all the forms");
+            return false;
+        }
+
+        $.ajax({
+            url: '/Enquiry/AddingEnquiries',
+            dataType: 'json',
+            data: EnquiryEnvelope,
+            global: false,
+            type: 'POST',
+            success: function (data) {
+                if (data != undefined) {
+                    alert("Your enquiry has been fulfilled");
+                }
+            }
+        });
+    }
+
+    function OpenEnquiry(MessageID) {
+        $('#ManageEnquiryContent_' + MessageID).html('<div class="spinner-border text-primary" role="status"/>');
+        var EnquiryEnvelope = {};
+        EnquiryEnvelope.MessageID = MessageID;
+        $.ajax({
+            url: '/Enquiry/ViewMessage?MessageID=' + MessageID,
+            dataType: 'html',
+            data: EnquiryEnvelope,
+            global: false,
+            type: 'POST',
+            contentType : 'application/json;charset=utf-8',
+            success: function (data) {
+                debugger;
+                $('#ManageEnquiryContent_' + MessageID).empty().html(data);
+            }
+        });
+    }
+</script>

@@ -1,0 +1,50 @@
+﻿@model FYP_ExchangeRate.Models.UserModel
+
+    <div class="text-center col-md-12">
+        <form id="SignUpForm" asp-controller="Account" asp-action="SignUpSubmit">
+            @if (ViewBag.IsSignSuccess != null && ViewBag.IsSignSuccess == false)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5>@ViewBag.SignUpError</h5>
+                    </div>
+                </div>
+            }
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Username*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.TextBoxFor(m => m.username)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Password*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.PasswordFor(m => m.password)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Email Address*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.TextBoxFor(m => m.emailaddress)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button id="SignUpSubmit">Submit</button>
+                    <button id="SignUpCancel">Cancel</button>
+                </div>
+            </div>
+        </form>
+        @if (ViewBag.IsSignSuccess != null && ViewBag.IsSignSuccess == true)
+        {
+            <div class="col-md-12">
+                <h5>The account has been successfully created, Please login in <a asp-area="" asp-controller="Account" asp-action="SignInHome">here</a></h5>
+            </div>
+        }
+    </div>

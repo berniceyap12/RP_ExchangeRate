@@ -1,0 +1,506 @@
+﻿@model List<FYP_ExchangeRate.Models.TransactionModels>
+@using Microsoft.AspNetCore.Http;
+@using Newtonsoft.Json;
+@{
+    string UserType = Context.Session.GetString("UserType");
+    string UserID = Context.Session.GetString("UserID");
+    int Month = Context.Session.GetString("Month") != null ? int.Parse(Context.Session.GetString("Month")) : 0;
+    int Year = Context.Session.GetString("Year") != null ? int.Parse(Context.Session.GetString("Year")) : 0;
+    List<TransactionModels> PendingTransaction = Model;
+    List<TransactionModels> PastTransaction = new List<TransactionModels>();
+    List<int> YearList = null;
+    List<int> MonthList = null;
+
+    if (UserType != "3")
+    {
+        PendingTransaction = Model.Where(t => t.IsConfirmed.HasValue && !t.IsConfirmed.Value).ToList();
+    }
+
+    if (Month >0 && Year >0)
+    {
+        PastTransaction = Model.Where(t => t.CreatedDate.Value >= new DateTime(Year, Month, 1) && t.CreatedDate.Value <= new DateTime(Year, Month, 1).AddMonths(1).AddDays(-1)).ToList();
+    }
+
+    if (Model.Count >0)
+    {
+        YearList = Model.Select(t=>t.CreatedDate.Value.Year).Distinct().OrderBy(x=>x).ToList();
+        MonthList = Model.Select(y => y.CreatedDate.Value.Month).Distinct().OrderBy(x=>x).ToList();
+    }
+}
+
+    <div class="text-center col-md-12">
+        @if (ViewBag.ErrorMessages != null)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h5>@ViewBag.ErrorMessages</h5>
+                </div>
+            </div>
+        }
+        <!-- Adding New Transaction only for customer -->
+        @if (!string.IsNullOrEmpty(UserType) && UserType == "3" && ViewBag.Countries != null)
+        {
+            <div class="col-md-12 text-left">
+                <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#NewExchangeRates">Add New Requests</button>
+                <div id="NewExchangeRates" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            
+                            @using (Html.BeginForm("InsertTransactions", "Transaction"))
+                            {
+                                //submit transaction request - Bernice
+                                @Html.AntiForgeryToken()
+                                <div class="modal-header">
+                                    Adding New Transactions
+                                    <button type="button" class="close" data-dismiss="modal">x</button>
+                                </div>
+                                <div class="modal-body">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label>Country From</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                @Html.DropDownList("FromCountryID", ViewBag.Countries as SelectList, "Please select a country", new { @class = "form-control", onchange = "ChangeCountryRate('fromCountry')", @ID = "FromCountryID" })
+                                                @Html.ValidationMessage("FromCountryID", "Please select the country", new { @class = "text-danger" })
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Country To</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                @Html.DropDownList("ToCountryID", ViewBag.Countries as SelectList, "Please select a country", new { @class = "form-control", onchange = "ChangeCountryRate('toCountry')", @ID = "ToCountryID" })
+                                                @Html.ValidationMessage("ToCountryID", "Please select the country", new { @class = "text-danger" })
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Currency Rate From</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="number" step="0.01" min="0" name="FromCountryRateReadOnly" id="FromCountryRateReadOnly" disabled />
+                                                <input type="hidden" step="0.01" min="0" name="FromCountryRate" id="FromCountryRate" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Currency Rate To</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="number" step="0.01" min="0" name="ToCountryRateReadOnly" id="ToCountryRateReadOnly" disabled />
+                                                <input type="hidden" step="0.01" min="0" name="ToCountryRate" id="ToCountryRate" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Amount To Be Exchange</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="number" step="0.01" min="0" name="InputMoneyAmount" id="InputMoneyAmount" onchange="CalculateAmount()" />
+                                                @Html.ValidationMessage("InputMoneyAmount", "Please fill in the amount", new { @class = "text-danger" })
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Total Amount</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="number" name="TotalCostAmountReadOnly" id="TotalCostAmountReadOnly" step="0.01" disabled />
+                                                <input type="hidden" name="TotalCostAmount" id="TotalCostAmount" step="0.01" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Payment Method</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <select id="PaymentMethod" name="PaymentMethod">
+                                                    <option value="Bank Transfer"> Bank Transfer</option>
+                                                    <option value="Paynow/PayLah"> Paynow/ Paylah</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Account No/Phone No</label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="text" name="Remarks" id="Remarks" />
+                                            </div>
+                                            @Html.Hidden("CustomerID", UserID)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer form-group">
+                                    <button type="submit">Submit A Request</button>
+                                    <button type="button" data-dismiss="modal">Cancel</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Pending Transactions-->
+        @if (PendingTransaction.Count > 0 && !string.IsNullOrEmpty(UserType))
+        {
+            <div class="col-md-12 text-center">
+                <h5>Pending Transactions</h5>
+                <table class="table table-bordered table-responsive table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                Transaction Status
+                            </th>
+                            <th>
+                                Customer
+                            </th>
+                            <th>
+                                Payment Method
+                            </th>
+                            <th>
+                                Country From
+                            </th>
+                            <th>
+                                Country To
+                            </th>
+                            <th>
+                                Ammount Input
+                            </th>
+                            <th>
+                                Total Amount
+                            </th>
+                            <th>
+                                Created Date
+                            </th>
+                            @if (UserType == "1" || UserType == "2")
+                            {
+                                <th>
+                                    Action
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mdl in PendingTransaction)
+                        {
+                            <tr>
+                                <td>
+                                    @if (mdl.IsConfirmed.Value)
+                                    {<span>Confirmed</span> }
+                                    else
+                                    { <span>Not Confirmed</span>}
+                                </td>
+                                <td>@mdl.CustomerName</td>
+                                <td>@mdl.PaymentMethod - @mdl.Remarks</td>
+                                <td>@mdl.CountryFrom : @mdl.FromCountryRate</td>
+                                <td>@mdl.CountryTo : @mdl.ToCountryRate</td>
+                                <td>@mdl.InputMoneyAmount</td>
+                                <td>@mdl.TotalCostAmount</td>
+                                <td>@mdl.CreatedDate</td>
+                                @if (mdl.IsConfirmed.HasValue && !mdl.IsConfirmed.Value && UserType != "3")
+                                {
+                                    <td>
+                                        @if (UserType == "1" || UserType == "2")
+                                        {
+                                            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#Confirm_@mdl.TransactionID.ToString()">Confirm</button>
+                                            <div id="Confirm_@mdl.TransactionID.ToString()" class="modal fade" role="dialog">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+
+                                                        @using (Html.BeginForm("ConfirmTransactions", "Transaction"))
+                                                        {
+                                                            //confirm transaction request - Bernice
+                                                            <div class="modal-header">
+                                                                Transaction Requests Confirmation
+                                                                <button type="button" class="close" data-dismiss="modal">x</button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Do you want to confirm the transactions ?
+                                                                <input type="hidden" value="@mdl.TransactionID" id="TransactionID" name="TransactionID" />
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="submit">Yes</button>
+                                                                <button type="button" data-dismiss="modal">No</button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (UserType == "1")
+                                        {
+                                            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#Delete_@mdl.TransactionID.ToString()">Delete</button>
+                                            <div id="Delete_@mdl.TransactionID.ToString()" class="modal fade" role="dialog">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        @using (Html.BeginForm("ConfirmTransactions", "Transaction"))
+                                                        {
+                                                            //Delete transaction request - Bernice
+                                                            <div class="modal-header">
+                                                                Transaction Requests Deletion
+                                                                <button type="button" class="close" data-dismiss="modal">x</button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Do you want to delete the transactions ?
+                                                                <input type="hidden" value="@mdl.TransactionID" id="TransactionID" name="TransactionID" />
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="submit">Yes</button>
+                                                                <button type="button" data-dismiss="modal">No</button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                }
+                                else if (UserType == "3")
+                                {
+                                    <td>
+                                        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#Enquiry_@mdl.TransactionID.ToString()">Enquiry</button>
+                                        <div id="Enquiry_@mdl.TransactionID.ToString()" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content" style="width:600px;">
+                                                    @using (Html.BeginForm("AddingEnquiries", "Enquiry"))
+                                                    {
+                                                        <div class="modal-header">
+                                                            Enquire About This Transaction
+                                                            <button type="button" class="close" data-dismiss="modal">x</button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="row">
+                                                                <div class="col-md-3">
+                                                                    <label>Enquiry Subject</label>
+                                                                </div>
+                                                                <div class="col-md-9">
+                                                                    @Html.TextArea("EnquirySubject", "Please fill the subject", 1, 50, new { })
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label>Enquiry Message</label>
+                                                                </div>
+                                                                <div class="col-md-9">
+                                                                    @Html.TextArea("EnquiryMessage", "Please fill in the message", 4, 50, new { })
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <input type="hidden" value="@mdl.TransactionID" id="TransactionID" name="TransactionID" />
+                                                            <input type="hidden" value="@UserID" id="CustomerID" name="CustomerID" />
+                                                            <input type="hidden" value="@UserID" id="CreatedBy" name="CreatedBy" />
+                                                            <input type="hidden" value="true" id="RefreshPage" name="RefreshPage" />
+                                                            <button type="submit">Submit</button>
+                                                            <button type="button" data-dismiss="modal">Cancel</button>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-12 text-center">
+                <h5> No Pending Transaction Requests</h5>
+            </div>
+        }
+
+        <!--view past transactions - ashitha-->
+
+        <div class="col-md-12 text-center">
+            <h5>Past Transactions</h5>
+            <div class="row col-12">
+                <div class="col-4" style="text-align:right">
+                    <label>Sort By :</label>
+                </div>
+                <div class="col-8" style="text-align:left">
+                    <label>Month: </label>
+                    <select id="MonthSelect" name="MonthSelect" onchange="FilterYearMonth();">
+                        @if (MonthList != null && MonthList.Count > 0)
+                        {
+                            <option value="0" selected="selected">All</option>
+                            @foreach (int mh in MonthList)
+                            {
+                                <option value="@mh">@mh</option>
+                            }
+                        }
+                    </select>
+                    <label>Year : </label>
+                    <select id="YearSelect" name="YearSelect" onchange="FilterYearMonth();">
+                        <option value="0" selected="selected">All</option>
+                        @if (YearList != null && YearList.Count > 0)
+                        {
+                            @foreach (int mh in YearList)
+                            {
+                                <option value="@mh">@mh</option>
+                            }
+                        }
+                    </select>
+
+                    @if (UserType == "1")
+                    {
+                        //generate report - JZ
+                        <button id="ExcelGenerate" onclick="GenerateExcelFiles()">Generate Report</button>
+                    }
+                </div>
+            </div>
+            <div id="MainTransactionHtml">
+                <table class="table table-bordered table-responsive table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                Transaction Status
+                            </th>
+                            <th>
+                                Customer
+                            </th>
+                            <th>
+                                Payment Method
+                            </th>
+                            <th>
+                                Country From
+                            </th>
+                            <th>
+                                Country To
+                            </th>
+                            <th>
+                                Ammount Input
+                            </th>
+                            <th>
+                                Total Amount
+                            </th>
+                            <th>
+                                Created Date
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mdl in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (mdl.IsConfirmed.Value)
+                                    {<span>Confirmed</span> }
+                                    else
+                                    { <span>Not Confirmed</span>}
+                                </td>
+                                <td>@mdl.CustomerName</td>
+                                <td>@mdl.PaymentMethod - @mdl.Remarks</td>
+                                <td>@mdl.CountryFrom : @mdl.FromCountryRate</td>
+                                <td>@mdl.CountryTo : @mdl.ToCountryRate</td>
+                                <td>@mdl.InputMoneyAmount</td>
+                                <td>@mdl.TotalCostAmount</td>
+                                <td>@mdl.CreatedDate</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<script>
+    var ExchangeRateList = @Html.Raw(JsonConvert.SerializeObject(ViewBag.ExchangeRateList));
+    function ChangeCountryRate(countryType) {
+        var ToCountry = $('#ToCountryID').val();
+        var FromCountry = $('#FromCountryID').val();
+
+        if (countryType == "fromCountry" && FromCountry != "Please select a country") {
+            var Rates = ExchangeRateList.filter(x => x.FromCountryID == FromCountry);
+            $('#ToCountryID option').each(function (index, option) {
+                $(option).remove();
+            });
+            $('#ToCountryID').append("<option selected='true'>Please select a country</option>");
+            for (var a = 0; a < Rates.length; a++) {
+                $('#ToCountryID').append('<option value='+Rates[a].ToCountryID+'>' + Rates[a].ToCountryName + '</option>');
+            }
+        }
+        else if (countryType == "toCountry") {
+            if (ToCountry.length > 0 && FromCountry.length > 0 && ExchangeRateList != null && ExchangeRateList.length > 0
+                && FromCountry != "Please select a country" && ToCountry != "Please select a country") {
+                var Rates = ExchangeRateList.filter(x => x.FromCountryID == FromCountry && x.ToCountryID == ToCountry);
+                if (Rates != null && Rates.length == 0) {
+                    alert("No exchange rate is found. Please select another country");
+                    return false;
+                }
+                $('#FromCountryRate').val(Rates[0].FromCountryRate);
+                $('#ToCountryRate').val(Rates[0].ToCountryRate);
+                $('#FromCountryRateReadOnly').val(Rates[0].FromCountryRate);
+                $('#ToCountryRateReadOnly').val(Rates[0].ToCountryRate);
+            }
+        }
+    }
+
+    function CalculateAmount() {
+        if ($('#FromCountryRate').val() != "" && $('#ToCountryRate').val() != "") {
+            var TotalAmount = $('#InputMoneyAmount').val() * $('#ToCountryRate').val() / $('#FromCountryRate').val();
+            $('#TotalCostAmount').val(TotalAmount.toFixed(2));
+            $('#TotalCostAmountReadOnly').val(TotalAmount.toFixed(2));
+        }
+    }
+    //submit enquiry - ashitha
+    function CreateNewEnquiry() {
+        var EnquiryEnvelope = {};
+        EnquiryEnvelope.TransactionID = $('#TransactionID').val();
+        EnquiryEnvelope.CustomerID = $('#CustomerID').val();
+        EnquiryEnvelope.EnquiryMessage = $('#EnquiryMessage').val();
+        EnquiryEnvelope.EnquirySubject = $('#EnquirySubject').val();
+        EnquiryEnvelope.CreatedBy = $('#CreatedBy').val();
+        EnquiryEnvelope.RefreshPage = true;
+
+        if (EnquiryEnvelope.EnquirySubject.length == 0 && EnquiryEnvelope.EnquiryMessage.length == 0) {
+            alert("Please fill all the forms");
+            return false;
+        }
+
+        $.ajax({
+            url: '/Enquiry/AddingEnquiries',
+            dataType: 'json',
+            data: EnquiryEnvelope,
+            global: false,
+            type : 'POST',
+            success: function (data) {
+                if (data != undefined) {
+                    alert("Your enquiry has been fulfilled");
+                }
+            }
+        });
+    }
+    //sort transactions
+    function FilterYearMonth() {
+        var EnquiryEnvelope = {};
+        var year = $('#YearSelect').val();
+        var month = $('#MonthSelect').val();
+        EnquiryEnvelope.CreatedDate = year + "-" + month+"-"+"01";
+        $.ajax({
+            url: '/Transaction/SortTransactions',
+            dataType: 'html',
+            data: EnquiryEnvelope,
+            global: false,
+            type : 'POST',
+            success: function (data) {
+                if (data != undefined) {
+                    debugger;
+                    $('#MainTransactionHtml').empty().html(data);
+                }
+            }
+        });
+    }
+    //generate report - ashitha
+    function GenerateExcelFiles() {
+        debugger;
+        var EnquiryEnvelope = {};
+        var year = $('#YearSelect').val();
+        var month = $('#MonthSelect').val();
+        EnquiryEnvelope.CreatedDate = year + "-" + month + "-" + "01";
+        EnquiryEnvelope.GenerateExcel = true;
+        $.ajax({
+            url: '/Transaction/SortTransactions',
+            dataType: 'json',
+            data: EnquiryEnvelope,
+            global: false,
+            type : 'POST',
+            success: function (data) {
+                if (data != undefined) {
+                    alert("Generate Succesfully");
+                }
+            }
+        });
+    }
+
+</script>

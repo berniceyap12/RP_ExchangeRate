@@ -1,0 +1,150 @@
+﻿@model List<FYP_ExchangeRate.Models.UserModel>
+<h5>The current users in the system</h5>
+<div class="text-center col-md-12">
+    @if (ViewBag.ErrorMessages != null)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <h5>@ViewBag.ErrorMessages</h5>
+            </div>
+        </div>
+    }
+    <table class="table table-bordered table-responsive table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Username
+                </th>
+                <th>
+                    Email Address
+                </th>
+                <th>
+                    Remarks
+                </th>
+                <th>
+                    Active Status
+                </th>
+                <th>
+                    
+                    Created Date
+                </th>
+                <th>
+                    Modified Date
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var obj in Model)
+            {
+                <tr>
+                    <td>@obj.username</td>
+                    <td>@obj.emailaddress</td>
+                    <td>@obj.Remarks</td>
+                    <td>@obj.IsActiveRemark</td>
+                    <td>@obj.CreatedDate</td>
+                    <td>@obj.ModifiedDate</td>
+                    <td>
+                        @if (@obj.IsActive)
+                        {
+                            //edit user account - wanli
+                            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#AccountEdit_@obj.userid.ToString()">Edit</button>
+                            <div id="AccountEdit_@obj.userid.ToString()" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        
+                                        <form asp-controller="Account" asp-action="UpdateAccount">
+                                            <div class="modal-header">
+                                                Update Account Info
+                                                <button type="button" class="close" data-dismiss="modal">x</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>UserID</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @obj.userid
+                                                        @Html.TextBox("userid", obj.userid, new { style = "display : none" })
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>Username*</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @Html.TextBox("username", obj.username)
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>Password*</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @Html.Password("password", obj.password)
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>Email Address*</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @Html.TextBox("emailaddress", obj.emailaddress)
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>Remarks*</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @Html.TextBox("remarks", obj.Remarks)
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label>Account Type*</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        @Html.DropDownList("usertype", new SelectList(Enum.GetValues(typeof(UserTypes))), "Account Type")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit">Submit</button>
+                                                <button type="button" data-dismiss="modal">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#AccountDelete_@obj.userid.ToString()">Delete</button>
+                            <div id="AccountDelete_@obj.userid.ToString()" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form asp-controller="Account" asp-action="DeleteAccount">
+                                            <div class="modal-header">
+                                                Delete Account
+                                                <button type="button" class="close" data-dismiss="modal">x</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure that you want to delete this user ?
+                                                @Html.TextBox("userid", obj.userid, new { style = "display : none" })
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit">Yes</button>
+                                                <button type="button" data-dismiss="modal">No</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>  

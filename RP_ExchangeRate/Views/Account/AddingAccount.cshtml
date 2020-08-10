@@ -1,0 +1,61 @@
+﻿@model FYP_ExchangeRate.Models.UserModel
+
+
+    <div class="text-center col-md-12">
+        <form id="SignUpForm" asp-controller="Account" asp-action="AddingAccount">
+            @if (ViewBag.IsSignUpAccountSuccess != null && ViewBag.IsSignUpAccountSuccess == false)
+            {
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5>@ViewBag.SignUpAccountError</h5>
+                    </div>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Username*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.TextBoxFor(m => m.username)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Password*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.PasswordFor(m => m.password)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Email Address*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.TextBoxFor(m => m.emailaddress)
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Account Type*</label>
+                </div>
+                <div class="col-md-6">
+                    @Html.DropDownListFor(m => m.usertype, new SelectList(Enum.GetValues(typeof(UserTypes))), "Select Account Type")
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button id="SignUpAccountSubmit">Submit</button>
+                    <button id="SignUpCancelSubmit">Cancel</button>
+                </div>
+            </div>
+        </form>
+        @if (ViewBag.IsSignUpAccountSuccess != null && ViewBag.IsSignUpAccountSuccess == true)
+        {
+            <div class="col-md-12">
+                <h5>The account has been successfully created, Please click <a asp-area="" asp-controller="Account" asp-action="ManageAccount">here</a> to manage the account</h5>
+            </div>
+        }
+    </div>
+

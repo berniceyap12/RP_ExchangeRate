@@ -1,0 +1,45 @@
+﻿@model List<FYP_ExchangeRate.Models.EnquiryModel>
+@using Microsoft.AspNetCore.Http;
+@{
+    string UserType = Context.Session.GetString("UserType");
+    string UserID = Context.Session.GetString("UserID");
+}
+<div class="modal-header">
+    Subject : @Model.First().EnquirySubject @if (Model.First().TransactionID.HasValue) { <p> -  Transaction ID : @Model.First().TransactionID</p> }
+    <button type="button" class="close" data-dismiss="modal">x</button>
+</div>
+@using (Html.BeginForm("AddingEnquiries","Enquiry"))
+{
+    <div class="modal-body">
+        <br />
+        @foreach (var obj in Model)
+        {
+            <div class="col-12 text-left">
+                <p style="font-size:14px">@obj.CreatedName </p>
+            </div>
+            <div class="col-12 text-left">
+                <p style="border-style: groove">@obj.EnquiryMessage</p>
+                <p style="font-size:10px">@obj.CreatedDate</p>
+            </div>
+        }
+        <br />
+        <div class="row">
+            <div class="col-3">
+                Reply :
+            </div>
+            <div class="col-9">
+                <textarea rows="4" cols="50" id="EnquiryMessage" name="EnquiryMessage" />
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <input type="hidden" id="TransactionID" name="TransactionID" value="@Model.First().TransactionID" />
+        <input type="hidden" id="MessageID" name="MessageID" value="@Model.First().MessageID" />
+        <input type="hidden" id="CustomerID" name="CustomerID" value="@Model.First().CustomerID" />
+        <input type="hidden" id="CreatedBy" name="CreatedBy" value="@UserID" />
+        <input type="hidden" id="RefreshPage" name="RefreshPage" value="true" />
+        <input type="hidden" id="EnquirySubject" name="EnquirySubject" value="@Model.First().EnquirySubject" />
+        <button type="submit">Submit</button>
+        <button type="button" data-dismiss="modal">Cancel</button>
+    </div>
+}
