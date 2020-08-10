@@ -170,7 +170,7 @@ namespace FYP_ExchangeRate.Controllers
             if (string.IsNullOrEmpty(model.username) || string.IsNullOrEmpty(model.password) || string.IsNullOrEmpty(model.emailaddress))
             {
                 ViewBag.IsSignUpSuccess = false;
-                ViewBag.SignUpError = "Please fill in all the forms";
+                ViewBag.SignUpError = "Please fill in all the blanks";
                 return View("SignUp");
             }
             try
@@ -178,7 +178,7 @@ namespace FYP_ExchangeRate.Controllers
                 if (dbContext.SelectAllUsers().Where(t => t.Username == model.username).Count() > 0)
                 {
                     ViewBag.IsSignUpSuccess = false;
-                    ViewBag.SignUpError = "The username has existed";
+                    ViewBag.SignUpError = "The username already exists";
                     return View("SignUp");
                 }
                 bool result = dbContext.InsertNewUser(new User { Username = model.username, Passwords = model.password, EmailAddress = model.emailaddress, UserType = 3 });
@@ -187,7 +187,7 @@ namespace FYP_ExchangeRate.Controllers
             catch (Exception ex)
             {
                 ViewBag.IsSignUpSuccess = false;
-                ViewBag.SignUpError = "There is an  error occurred" + ex.Message;
+                ViewBag.SignUpError = "An error occurred" + ex.Message;
             }
             return View("SignIn");
         }

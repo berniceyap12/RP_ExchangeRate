@@ -36,7 +36,7 @@ namespace FYP_ExchangeRate.Controllers
                 var CurrentCountry = dbContext.SelectAllCountries().Where(t => t.CountryName == model.CountryName).ToList();
                 if (CurrentCountry != null && CurrentCountry.Count() >0)
                 {
-                    throw new Exception("The same country has existed !");
+                    throw new Exception("This country already exists!");
                 }
                 var updateResult = dbContext.InsertNewCountry(new Country
                 {
@@ -113,7 +113,7 @@ namespace FYP_ExchangeRate.Controllers
             {
                 if (CurrentRate.Where(t=>t.ToCountryID == exchangerate.ToCountryID && t.FromCountryID == exchangerate.FromCountryID).Count() >0)
                 {
-                    ViewBag.ErrorMessages = string.Format("The rate for the selected country is already existed !");
+                    ViewBag.ErrorMessages = string.Format("The rate for the selected country already exists!");
                 }
                 else
                 {
@@ -129,7 +129,7 @@ namespace FYP_ExchangeRate.Controllers
             }
             catch(Exception ex)
             {
-                ViewBag.ErrorMessages = string.Format("There is an error occurred /n {0}", ex.Message);
+                ViewBag.ErrorMessages = string.Format("An error occurred /n {0}", ex.Message);
             }
             ViewBag.ExchangeRates = CurrentRate;
             ViewBag.Countries = GetCountrySelectList();
@@ -152,7 +152,7 @@ namespace FYP_ExchangeRate.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessages = string.Format("There is an error occurred /n {0}", ex.Message);
+                ViewBag.ErrorMessages = string.Format("An error occurred /n {0}", ex.Message);
             }
             ViewBag.ExchangeRates = GetExchangeRateList();
             ViewBag.Countries = GetCountrySelectList();
@@ -170,7 +170,7 @@ namespace FYP_ExchangeRate.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessages = string.Format("There is an error occurred /n {0}", ex.Message);
+                ViewBag.ErrorMessages = string.Format("An error occurred /n {0}", ex.Message);
             }
             ViewBag.ExchangeRates = GetExchangeRateList();
             ViewBag.Countries = GetCountrySelectList();
